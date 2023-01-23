@@ -1,10 +1,7 @@
 package com.datahub.datahub.entity;
 
 import com.datahub.datahub.entity.template.LongEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -15,7 +12,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Entity
 @EqualsAndHashCode(callSuper = true)
-
+@Table(uniqueConstraints = {@UniqueConstraint(columnNames = {"name", "owner_id"})})
 public class Company extends LongEntity {
 
     @Column(nullable = false)

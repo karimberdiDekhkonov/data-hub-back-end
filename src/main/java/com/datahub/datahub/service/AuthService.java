@@ -14,6 +14,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.util.Random;
 
 @Service
@@ -29,8 +30,8 @@ public class AuthService implements UserDetailsService {
     JavaMailSender mailSender;
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return null;
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        return userRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException(email));
     }
 
     public ApiResponse registerUser(RegisterDto registerDto) {
@@ -63,5 +64,21 @@ public class AuthService implements UserDetailsService {
         }catch (Exception e){
             return false;
         }
+    }
+
+    public ApiResponse verifyEmail(String email, int emailCode) {
+        Optional<User> optionalUser = userRepository.findByEmail(email);
+        if (optionalUser.isPresent()){
+            User user = optionalUser.get();
+
+            if (emailCode == user.getSecurityCode()){
+                user.setEnabled(true);
+                user.setSecurityCode(0);
+                userRepository.save(user);
+                return new ApiResponse("Code is correct",true);
+            }
+            return new ApiResponse("Code is wrong",false);
+        }
+        return new ApiResponse("Email is wrong", false);
     }
 }

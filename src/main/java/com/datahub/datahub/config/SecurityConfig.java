@@ -2,12 +2,14 @@ package com.datahub.datahub.config;
 
 import com.datahub.datahub.entity.User;
 import com.datahub.datahub.service.AuthService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ObservationAuthenticationManager;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -27,24 +29,17 @@ import java.util.Properties;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    @Bean
-    public EmbeddedLdapServerContextSourceFactoryBean contextSourceFactoryBean() {
-        EmbeddedLdapServerContextSourceFactoryBean contextSourceFactoryBean =
-                EmbeddedLdapServerContextSourceFactoryBean.fromEmbeddedLdapServer();
-        contextSourceFactoryBean.setPort(0);
-        return contextSourceFactoryBean;
-    }
+    @Autowired
+    AuthService authService;
 
     @Bean
-    AuthenticationManager ldapAuthenticationManager(
-            BaseLdapPathContextSource contextSource) {
-        LdapBindAuthenticationManagerFactory factory =
-                new LdapBindAuthenticationManagerFactory(contextSource);
-        factory.setUserDnPatterns("uid={0},ou=people");
-        factory.setUserDetailsContextMapper(new PersonContextMapper());
-        return factory.createAuthenticationManager();
-    }
+    AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
+        AuthenticationManagerBuilder builder = http.getSharedObject(AuthenticationManagerBuilder.class);
 
+        builder.userDetailsService(authService);
+
+        return builder.build();
+    }
     @Bean
     public UserDetailsService userDetails(PasswordEncoder encoder){
         return new AuthService();
